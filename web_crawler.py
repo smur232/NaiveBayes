@@ -1,55 +1,69 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from collections import deque
 
-def determine_category_file(url):
-    if 'entertainment' in url:
-        return 'entertainment.txt'
+def begin_crawling_from_this_page(url, max_num_of_articles=20):
+    links = deque()
+    links.append(url)
+    count = 0
+    while links and count < max_num_of_articles:
+        write_body_to_file(links.popleft(), links, max_num_of_articles)
+        count += 1
 
-def write_body_to_file(url):
+def write_body_to_file(url,links, max_num_of_articles):
+    file_to_write_to = determine_category_file(url)
+
+    if file_to_write_to == 'ignore':
+        return
+
+    print('Current going through ', url, ':')
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
-    links = collect_links(soup)
-    print(links)
-    f = open(determine_category_file(url), 'w')
-
-# print(soup.find_all("div", class_="story-body__inner"))
-    for tag in soup.find_all('p', class_=lambda class_tag: class_tag == 'story-body__introduction' or class_tag == None, attrs={'style':None}):
-        f.write(str(tag.contents[0]) + '\n')
-    f.close()
+    links.extend(collect_links(soup))
+    f = open(file_to_write_to, 'a')
+    try:
+        for tag in soup.find_all('p', class_=lambda class_tag: class_tag == 'story-body__introduction' or class_tag == None, attrs={'style':None}):
+            # print(tag)
+            contents = str(tag.contents[0])
+            if 'href' not in contents and 'span' not in contents:
+                f.write(contents + '\n')
+    except:
+        print('had some problem parsing through this page', url)
+    else:
+        print('     successfully written to file', file_to_write_to)
+    finally:
+        f.close()
 
 def collect_links(soup):
-    links = []
-    # for link in soup.find_all('a'):
-    for link in soup.find_all(href=not_lacie):
-        url = link.get('href')
-        if url != None and 'news' in url:
-            links.append(url)
+    links = ['http://www.bbc.com' + link.get('href') for link in soup.find_all(href=path_to_articles)]
     return links
 
-def not_lacie(href):
+def path_to_articles(href):
     return href and re.compile("(?<![a-z])/news/[\w-]+-[\d]+").search(href)
     #(?<![a-z]) this is saying to find all the /news/somestringofwords/stringofnumbers
     #that do not have any preceding alphabets, so those will be ones with .co.uk/news or .com/news
 
-write_body_to_file('http://www.bbc.com/news/entertainment-arts-34380060')
+def determine_category_file(url):
+    if 'entertainment' in url:
+        return 'entertainment.csv'
+    elif 'business' in url:
+        return 'business.csv'
+    elif 'australia' in url:
+        return 'australia.csv'
+    elif 'asia' in url:
+        return 'asia.csv'
+    elif 'technology' in url:
+        return 'technology.csv'
+    elif 'europe' in url:
+        return 'europe.csv'
+    elif 'middle-east' in url:
+        return 'europe.csv'
+    elif 'latin_america' in url:
+        return 'latin_america.csv'
+    elif 'africa' in url:
+        return 'africa.csv'
+    else:
+        return 'ignore'
 
-#r = requests.get('http://bbc.co.uk')
-# soup = BeautifulSoup(r.text, "html.parser")
-#
-# for link in soup.find_all('a'):
-#     mylink = link.get('href')
-#     if 'news' in mylink:
-#         print(mylink)
-
-# import requests
-# from lxml import html
-#
-# response = requests.get('http://jakeaustwick.me')
-#
-# # Parse the body into a tree
-# parsed_body = html.fromstring(response.text)
-#
-# # Perform xpaths on the tree
-# print(parsed_body.xpath('//title/text()')) # Get page title
-# print(parsed_body.xpath('//a/@href'))
+begin_crawling_from_this_page('http://www.bbc.com/news/technology-34391038', 3)
