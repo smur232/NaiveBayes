@@ -30,8 +30,6 @@ def begin_crawling_from_this_page(url, max_num_of_articles=20, pages_visited = s
             articles_read_for_category.update([written_to_file])
             count += 1
 
-    # print('Read', sum(articles_read_for_category.values()), 'articles')
-    # print(articles_read_for_category.items())
     return articles_read_for_category, pages_visited
 
 
