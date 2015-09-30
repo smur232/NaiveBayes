@@ -56,18 +56,18 @@ def write_body_to_file(url,links):
             contents = str(pTag.contents[0])
             if 'href' not in contents and 'span' not in contents:
                 f.write(contents + '\n')
+
     except AttributeError as e:
-        f.close()
         print('     This page does not have a body article: ', url, e)
-        return
 
     except Exception as e:
-        f.close()
         print('Had some problem parsing through this page: ', url, e)
-        return
+
     else:
-        f.close()
         print('     successfully written to file', file_to_write_to)
+
+    finally:
+        f.close()
         return file_to_write_to
 
 
@@ -84,8 +84,8 @@ def collect_links(soup):
 
 
 def path_to_articles(href):
-    #(?<![a-z]) this is saying to find all the /news/somestringofwords/stringofnumbers
-    #that do not have any preceding alphabets, so those will be ones with .co.uk/news or .com/news
+    # (?<![a-z]) this is saying to find all the /news/somestringofwords/stringofnumbers
+    # that do not have any preceding alphabets, so those will be ones with .co.uk/news or .com/news
     return href and re.compile("(?<![a-z])/news/[\w-]+-[\d]+").search(href)
 
 
@@ -104,7 +104,7 @@ def determine_category_file(url):
         return 'europe.csv'
     elif 'middle-east' in url:
         return 'middle_east.csv'
-    elif 'latin_america' in url:
+    elif 'latin-america' in url:
         return 'latin_america.csv'
     elif 'africa' in url:
         return 'africa.csv'
@@ -117,32 +117,11 @@ def determine_category_file(url):
     else:
         return 'ignore'
 
-middle_east_count, visited_pages = begin_crawling_from_this_page('http://www.bbc.com/news/world-middle-east-34399164', 10)
-# print('Read', sum(middle_east_count.values()), 'articles')
-# print(middle_east_count.items())
-technology_count, visited_pages2 = begin_crawling_from_this_page('http://www.bbc.com/news/technology-34404309', 10, visited_pages)
+latin_america_count, visited_pages = begin_crawling_from_this_page('http://www.bbc.com/news/world-latin-america-34405302', 10)
+print('Read', sum(latin_america_count.values()), 'articles')
+print(latin_america_count.items())
 
-technology_count.update(middle_east_count)
-#
-# business_count, visited_pages3 = begin_crawling_from_this_page('http://www.bbc.com/news/business-34401043', 10, visited_pages2)
-#
-# business_count.update(technology_count)
-#
-# science_count, visited_pages4 = begin_crawling_from_this_page('http://www.bbc.com/news/science-environment-34408414', 10, visited_pages3)
-#
-# science_count.update(business_count)
-#
-# entertainment_count, visited_pages5 = begin_crawling_from_this_page('http://www.bbc.com/news/entertainment-arts-34402671', 10, visited_pages4)
-#
-# entertainment_count.update(science_count)
-#
-# asia_count, visited_pages6 = begin_crawling_from_this_page('http://www.bbc.com/news/world-asia-34398371', 10, visited_pages5)
-#
-# asia_count.update(entertainment_count)
-#
-# print('Read', sum(asia_count.values()), 'articles')
-# print(asia_count.items())
-# f = open('Articles_Read', 'a')
-# f.write(str(visited_pages6) + '\n')
-# f.write(str(asia_count.items()) + '\n')
-# f.close()
+f = open('Articles_Read', 'a')
+f.write(str(visited_pages) + '\n')
+f.write(str(latin_america_count.items()) + '\n')
+f.close()
