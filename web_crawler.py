@@ -1,20 +1,25 @@
 import requests
 import re
 import time
+import pickle
+
 from collections import deque
 from collections import Counter
 from bs4 import BeautifulSoup
+from trying_pickle import whats_in_my_pickle
 
 
-def begin_crawling_from_this_page(url, max_num_of_articles=20, pages_visited = set()):
+def begin_crawling_from_this_page(url, max_num_of_articles=20):
     # max_num_of_articles は何ページアクセスする数ではなくて、何ページものの記事が欲しいかを決めます。
     # 現在はページをアクセスするたびにconsoleにprintしているので結構console output が多いです
 
     links = deque()
-    pages_visited = set(pages_visited) # just in case the input was not a set
     links.append(url)
     count = 0
-    articles_read_for_category = Counter()
+    pages_visited = get_pages_visited()
+    articles_read_for_category = get_article_counts()
+    print('pages visited before: ', pages_visited)
+    print('articles read before: ', articles_read_for_category)
 
     while links and count < max_num_of_articles:
         url = links.popleft()
@@ -27,10 +32,28 @@ def begin_crawling_from_this_page(url, max_num_of_articles=20, pages_visited = s
         written_to_file = write_body_to_file(url, links)
 
         if written_to_file:
+            # .update takes a file name and increments the counter for it
             articles_read_for_category.update([written_to_file])
             count += 1
 
-    return articles_read_for_category, pages_visited
+    pickle.dump(articles_read_for_category, open('articles_read_counter.p', 'wb'))
+    pickle.dump(pages_visited, open('url_visited_sites_set.p', 'wb'))
+    return
+
+def get_pages_visited():
+
+    try:
+        return pickle.load(open('url_visited_sites_set.p', 'rb')) # just in case the input was not a set
+
+    except FileNotFoundError:
+        return set()
+
+
+def get_article_counts():
+    try:
+        return pickle.load(open('articles_read_counter.p', 'rb'))
+    except FileNotFoundError:
+        return Counter()
 
 
 def write_body_to_file(url,links):
@@ -57,8 +80,8 @@ def write_body_to_file(url,links):
             if 'href' not in contents and 'span' not in contents:
                 f.write(contents + '\n')
 
-    except AttributeError as e:
-        print('     This page does not have a body article: ', url, e)
+    except AttributeError:
+        print('     This page does not have a body article: ', url)
 
     except Exception as e:
         print('Had some problem parsing through this page: ', url, e)
@@ -114,14 +137,20 @@ def determine_category_file(url):
         return 'science.csv'
     elif 'uk' in url:
         return 'uk.csv'
+    elif 'education' in url:
+        return 'education.csv'
     else:
         return 'ignore'
 
-latin_america_count, visited_pages = begin_crawling_from_this_page('http://www.bbc.com/news/world-latin-america-34405302', 10)
-print('Read', sum(latin_america_count.values()), 'articles')
-print(latin_america_count.items())
 
-f = open('Articles_Read', 'a')
-f.write(str(visited_pages) + '\n')
-f.write(str(latin_america_count.items()) + '\n')
-f.close()
+def whats_in_my_pickle():
+    a = get_article_counts()
+    b = get_pages_visited()
+    print('Total number of articles: ', sum(a.values()))
+    print('Total number of links: ', len(b))
+    print(a)
+    print(b)
+
+
+begin_crawling_from_this_page('http://www.bbc.com/news/world-asia-34398371', 10)
+whats_in_my_pickle()
