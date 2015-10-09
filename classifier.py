@@ -8,7 +8,7 @@ from pickle_reader import read_object_from
 
 def get_most_likely_category(word_count_new_article):
     probability_dict = dict()
-    categories = ['business', 'asia', 'technology', 'europe']
+    categories = ['business', 'asia', 'technology', 'uk']
     for category in categories:
         update_probabilities(category)
         category_word_probabilities = read_object_from(category + '_probability.p', defaultdict)
@@ -16,8 +16,7 @@ def get_most_likely_category(word_count_new_article):
     largest_probability = max(probability_dict.values())
     likely_category = [x for x,y in probability_dict.items() if y ==largest_probability]
     print(probability_dict)
-    print(likely_category)
-    return likely_category
+    return likely_category[0]
 
 
 def count_words_in_article(url):
@@ -36,10 +35,11 @@ def split_into_words(contents):
     return [word.strip(string.punctuation).lower() for word in contents.split()]
 
 
-def get_probability_of_word(word, probability_dict, word_count):
+def get_probability_of_word(word, probability_dict, total_word_count):
     probability = probability_dict[word]
     if probability == 0:
-        return 1/(word_count+2)
+        return 1/(total_word_count+2)
+        # (1/ 1000000) (1/100
     return probability
 
 

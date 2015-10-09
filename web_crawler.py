@@ -1,6 +1,6 @@
 import re, pickle, string, time, traceback
 
-from collections import deque, Counter, defaultdict
+from collections import deque, Counter
 from article_parser import get_all_body_p_tags_bbc, get_soup_of_page, get_all_body_p_tags_nyt
 from pickle_reader import read_object_from
 
@@ -93,30 +93,30 @@ def path_to_articles(href):
 def determine_category_file(url):
     if 'entertainment' in url:
         return 'entertainment'
-    elif 'business' in url:
-        return 'business'
-    elif 'australia' in url:
-        return 'australia'
-    elif 'asia' in url:
-        return 'asia'
+    # elif 'business' in url:
+    #     return 'business'
+    # elif 'australia' in url:
+    #     return 'australia'
+    # elif 'asia' in url:
+    #     return 'asia'
     elif 'technology' in url:
         return 'technology'
-    elif 'europe' in url:
-        return 'europe'
-    elif 'middle-east' in url:
-        return 'middle_east'
-    elif 'latin-america' in url:
-        return 'latin_america'
-    elif 'africa' in url:
-        return 'africa'
-    elif 'canada' in url:
-        return 'us_canada'
-    elif 'science' in url:
-        return 'science'
-    elif 'uk' in url:
-        return 'uk'
-    elif 'education' in url:
-        return 'education'
+    # elif 'europe' in url:
+    #     return 'europe'
+    # elif 'middle-east' in url:
+    #     return 'middle_east'
+    # elif 'latin-america' in url:
+    #     return 'latin_america'
+    # elif 'africa' in url:
+    #     return 'africa'
+    # elif 'canada' in url:
+    #     return 'us_canada'
+    # elif 'science' in url:
+    #     return 'science'
+    # elif 'uk' in url:
+    #     return 'uk'
+    # elif 'education' in url:
+    #     return 'education'
     else:
         return 'ignore'
 

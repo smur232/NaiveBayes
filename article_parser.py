@@ -21,3 +21,4 @@ def get_soup_of_page(url):
     r = requests.get(url)
     r.raise_for_status()
     return BeautifulSoup(r.text, "html.parser")
+
