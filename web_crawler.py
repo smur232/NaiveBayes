@@ -1,18 +1,13 @@
-import requests
-import re
-import time
-import pickle
-import string
-import traceback
+import re, pickle, string, time, traceback
 
-from collections import deque
-from collections import Counter
-from bs4 import BeautifulSoup
+from collections import deque, Counter, defaultdict
+from article_parser import get_all_body_p_tags_bbc, get_soup_of_page, get_all_body_p_tags_nyt
+from pickle_reader import read_object_from
 
 
 def begin_crawling_from_this_page(url, max_num_of_articles=20):
     # max_num_of_articles は何ページアクセスする数ではなくて、何ページものの記事が欲しいかを決めます。
-    # 現在はページをアクセスするたびにconsoleにprintしているので結構console output が多いです
+    # 現在はページをアクセスするたびに console に print しているので結構console output が多いです
 
     links = deque()
     links.append(url)
@@ -54,27 +49,26 @@ def write_body_to_file(url,links):
     f = open(article_category + '.csv', 'a')
 
     try:
-        r = requests.get(url)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
+        soup = get_soup_of_page(url)
         links.extend(collect_links(soup))
 
-        p_tags = get_all_body_p_tags(soup)
-        a = read_object_from(article_category + '.p', Counter)
+        p_tags = get_all_body_p_tags_bbc(soup)
+
+        word_counter = read_object_from(article_category + '.p', Counter)
         for pTag in p_tags:
             contents = str(pTag.contents[0])
 
             # 後で見れるように、CSV ファイルにも書いて、pickle にも文字のカウンターをアップデートします
             if 'href' not in contents and 'span' not in contents:
                 f.write(contents + '\n')
-                a.update(word.strip(string.punctuation).lower() for word in contents.split())
-        pickle.dump(a, open(article_category + '.p', 'wb'))
+                word_counter.update(word.strip(string.punctuation).lower() for word in contents.split())
+        pickle.dump(word_counter, open(article_category + '.p', 'wb'))
 
     except AttributeError:
         print('     This page does not have a body article: ', url)
 
     except Exception as e:
-        ('Had some problem parsing through this page: ', url, e)
+        print('Had some problem parsing through this page: ', url, e)
         traceback.print_exc()
 
     else:
@@ -83,13 +77,6 @@ def write_body_to_file(url,links):
     finally:
         f.close()
         return article_category
-
-
-def get_all_body_p_tags(soup):
-    # 後で、新しい記事のカテゴリーを決める時に使える function です
-    body_div_tag = soup.find('div', {'class': 'story-body__inner'})
-    p_tags = body_div_tag.find_all('p', class_=lambda class_tag: class_tag == 'story-body__introduction' or class_tag == None, attrs={'style':None})
-    return p_tags
 
 
 def collect_links(soup):
@@ -101,26 +88,6 @@ def path_to_articles(href):
     # (?<![a-z]) this is saying to find all the /news/somestringofwords/stringofnumbers
     # that do not have any preceding alphabets, so those will be ones with .co.uk/news or .com/news
     return href and re.compile("(?<![a-z])/news/[\w-]+-[\d]+").search(href)
-
-
-def read_object_from(filename, object_type):
-    # pickle からオブジェクとを読み取ります、欲しい object_type とマッチしているかをチェックします
-    # object_type　がマッチしなければ、空の object_type を return します
-
-    try:
-        read_object = pickle.load(open(filename, 'rb'))
-        assert type(read_object) is object_type
-        return read_object
-
-    except FileNotFoundError:
-        return object_type()
-
-    except AssertionError:
-        print('         The object read from', filename, 'is not a', object_type, '!')
-        return object_type()
-
-    except Exception:
-        return object_type()
 
 
 def determine_category_file(url):
@@ -158,13 +125,19 @@ def whats_in_my_pickle():
     print("\nWhat's in my pickle objects? ")
     a = read_object_from('articles_read_counter.p', Counter)
     b = read_object_from('visited_pages_set.p', set)
-    c = read_object_from('europe.p', Counter)
     print(' Total number of articles:', sum(a.values()))
     print(' Total number of links:', len(b))
     print(a)
-    print(b)
-    print(c)
 
 
-#begin_crawling_from_this_page('http://www.bbc.com/news/world-europe-34442121', 2)
-whats_in_my_pickle()
+# TODO:
+# 1) take an article, parse the body text DONE
+# 2) get the counts of those words DONE
+# 3) then find the probability that this word occurs given it is a certain category DONE
+# 4) automate getting probability for each category
+# 5) take the best probability and output the result category
+# implement a separate file that will take a new article, find the probabilities that it could be each
+# of the categories, then take the category with the highest probability
+
+# also we separate helper functions used in both article category determination and adding training data to
+# a separate file so web crawler and determine category can use the same functions
