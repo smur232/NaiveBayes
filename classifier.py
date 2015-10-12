@@ -1,21 +1,21 @@
-import string, pickle
+import string, pickle, time
 from math import log
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 
+from web_crawler import begin_crawling_from_this_page, determine_category_file, collect_links
 from article_parser import get_all_body_p_tags_bbc, get_soup_of_page
 from pickle_reader import read_object_from
 
 
 def get_most_likely_category(word_count_new_article):
     probability_dict = dict()
-    categories = ['business', 'asia', 'technology', 'uk']
+    categories = ['business', 'asia', 'technology', 'uk', 'europe']
     for category in categories:
         update_probabilities(category)
         category_word_probabilities = read_object_from(category + '_probability.p', defaultdict)
         probability_dict[category] = get_total_probability(category_word_probabilities, word_count_new_article, category)
     largest_probability = max(probability_dict.values())
-    likely_category = [x for x,y in probability_dict.items() if y ==largest_probability]
-    print(probability_dict)
+    likely_category = [x for x, y in probability_dict.items() if y == largest_probability]
     return likely_category[0]
 
 
@@ -81,5 +81,45 @@ def get_count_from_text_file(filename):
             word_counter.update(split_into_words(line))
         return word_counter
 
-# categories = ['entertainment', 'business', 'australia', 'asia', 'technology', 'europe', 'middle_east',
-#               'latin_america', 'africa', 'us_canada', 'science', 'uk', 'education']
+
+def test_precision_recall(url, category, max_num_of_articles):
+    links = deque()
+    links.append(url)
+    count = 0
+
+    articles_in_training_set = read_object_from('visited_pages_set.p', set)
+    articles_in_testing = read_object_from('tested_articles_url.p', set)
+    print(articles_in_testing)
+    while links and count < max_num_of_articles:
+        try:
+            next_url = links.popleft()
+            soup = get_soup_of_page(next_url)
+            links.extend(collect_links(soup))
+
+            if next_url in articles_in_training_set or next_url in articles_in_testing:
+                continue
+
+            time.sleep(1)
+
+            article_category = determine_category_file(next_url)
+            if article_category != category:
+                continue
+
+            word_counter_new_article = count_words_in_article(next_url)
+            category_guess = get_most_likely_category(word_counter_new_article)
+
+            print('Currently going through ', next_url, ':')
+            articles_in_testing.add(next_url)
+            count += 1
+            print('     Your guess is', category_guess, '. The actual category is', article_category)
+
+        except AttributeError:
+            print('something went wrong, here', next_url, 'we will look at the next link')
+            continue
+
+        except Exception as e:
+            print('an unexpected error occurred, we will look at the next link: ', e)
+            continue
+
+    print('I have looked at', count, 'articles')
+    pickle.dump(articles_in_testing, open('tested_articles_url.p', 'wb'))

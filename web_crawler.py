@@ -91,32 +91,32 @@ def path_to_articles(href):
 
 
 def determine_category_file(url):
-    if 'entertainment' in url:
-        return 'entertainment'
-    # elif 'business' in url:
-    #     return 'business'
-    # elif 'australia' in url:
-    #     return 'australia'
-    # elif 'asia' in url:
-    #     return 'asia'
+    if 'business' in url:
+        return 'business'
+    elif 'asia' in url:
+        return 'asia'
     elif 'technology' in url:
         return 'technology'
-    # elif 'europe' in url:
-    #     return 'europe'
-    # elif 'middle-east' in url:
-    #     return 'middle_east'
-    # elif 'latin-america' in url:
-    #     return 'latin_america'
-    # elif 'africa' in url:
-    #     return 'africa'
-    # elif 'canada' in url:
-    #     return 'us_canada'
-    # elif 'science' in url:
-    #     return 'science'
-    # elif 'uk' in url:
-    #     return 'uk'
-    # elif 'education' in url:
-    #     return 'education'
+    elif 'europe' in url:
+        return 'europe'
+    elif 'uk' in url:
+        return 'uk'
+    elif 'australia' in url:
+        return 'australia'
+    elif 'entertainment' in url:
+        return 'entertainment'
+    elif 'middle-east' in url:
+        return 'middle_east'
+    elif 'latin-america' in url:
+        return 'latin_america'
+    elif 'africa' in url:
+        return 'africa'
+    elif 'canada' in url:
+        return 'us_canada'
+    elif 'science' in url:
+        return 'science'
+    elif 'education' in url:
+        return 'education'
     else:
         return 'ignore'
 
@@ -128,16 +128,3 @@ def whats_in_my_pickle():
     print(' Total number of articles:', sum(a.values()))
     print(' Total number of links:', len(b))
     print(a)
-
-
-# TODO:
-# 1) take an article, parse the body text DONE
-# 2) get the counts of those words DONE
-# 3) then find the probability that this word occurs given it is a certain category DONE
-# 4) automate getting probability for each category
-# 5) take the best probability and output the result category
-# implement a separate file that will take a new article, find the probabilities that it could be each
-# of the categories, then take the category with the highest probability
-
-# also we separate helper functions used in both article category determination and adding training data to
-# a separate file so web crawler and determine category can use the same functions
